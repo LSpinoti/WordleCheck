@@ -22,17 +22,25 @@ import java.time.format.DateTimeFormatter
 
 
 class MainActivity : AppCompatActivity() {
+
+    // Fields
     var json: WordBank?
     var word: String?
 
+    // Set defaults
     init {
         json = null
         word = "CIGAR"
     }
+
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
+
         setContentView(R.layout.activity_main)
+
+	// Download 
         val downthread = DownloadThread(filesDir, this@MainActivity)
         if (connected()) {
             downthread.start()
@@ -42,9 +50,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         try {
+	    // Parse json
             this.json =
                 Klaxon().parse<WordBank>(File(filesDir, "words.json").readText(Charsets.UTF_8))
 
+	    // Make wordBox all-caps
             val wordBox = findViewById<EditText>(R.id.wordBox)
             val editfilters = wordBox.filters + InputFilter.AllCaps()
             wordBox.filters = editfilters
@@ -61,6 +71,7 @@ class MainActivity : AppCompatActivity() {
         val wordBox = findViewById<EditText>(R.id.wordBox)
         word = wordBox.text.toString().lowercase()
 
+	// Make sure length is 5
         if (word!!.length < 5) {
             val output = findViewById<TextView>(R.id.textView)
             val subview = findViewById<TextView>(R.id.subView)
@@ -71,6 +82,7 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
+	// Check if word is used
         if (json != null) {
             if (json!!.contains(word!!)) {
                 if (date.isAfter(json!!.wordToDate(word!!))) {
@@ -86,8 +98,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // Run when a used word is found
     @RequiresApi(Build.VERSION_CODES.O)
     fun used() {
+	// Set appearance
         val output = findViewById<TextView>(R.id.textView)
         val subview = findViewById<TextView>(R.id.subView)
         val bg = findViewById<ConstraintLayout>(R.id.frame)
@@ -102,11 +116,15 @@ class MainActivity : AppCompatActivity() {
         output.setTextColor(getColor(R.color.white))
         update.visibility = View.INVISIBLE
         output.text = "USED"
+
+	// Display the date the word was used
         subview.text = "on " + json!!.wordToDate(word!!).format(DateTimeFormatter.ofPattern("MMMM d, uuuu"))
     }
 
+    // Run if the word is not used
     @RequiresApi(Build.VERSION_CODES.O)
     fun valid() {
+	// Set appearance
         val output = findViewById<TextView>(R.id.textView)
         val subview = findViewById<TextView>(R.id.subView)
         val bg = findViewById<ConstraintLayout>(R.id.frame)
@@ -122,6 +140,8 @@ class MainActivity : AppCompatActivity() {
         update.setTextColor(getColor(R.color.green))
         update.setBackgroundColor(getColor(R.color.white))
         output.text = "NOT USED"
+
+	// Use the latest date available in the JSON to say "as of"
         if (json!!.latestDate() < LocalDate.now().minusDays(1)) {
             subview.text = "as of " + json!!.latestDate().format(DateTimeFormatter.ofPattern("MMMM d, uuuu"))
             update.visibility = View.VISIBLE
@@ -137,9 +157,11 @@ class MainActivity : AppCompatActivity() {
             val downthread = DownloadThread(filesDir, this@MainActivity)
             downthread.start()
             try {
+		// Parse json
                 this.json =
                     Klaxon().parse<WordBank>(File(filesDir, "words.json").readText(Charsets.UTF_8))
 
+		// Make wordbox all-caps
                 val wordBox = findViewById<EditText>(R.id.wordBox)
                 val editfilters = wordBox.filters + InputFilter.AllCaps()
                 wordBox.filters = editfilters
@@ -153,6 +175,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // Check internet connectivity
     @RequiresApi(Build.VERSION_CODES.O)
     fun connected(): Boolean {
         return try {
@@ -174,9 +197,12 @@ class DownloadThread(filesDir: File, con: Context): Thread() {
         cont = con
     }
 
+    // Downloads words.json
     @RequiresApi(Build.VERSION_CODES.O)
     public override fun run() {
         try {
+	    // The gist at the following URL gets updated every day at 12:00
+	    // Note that NYT keeps the following day's word available
             val url = URL("https://gist.githubusercontent.com/LSpinoti/7590cb7e52132b01356dbca98d7d44e1/raw/c69cf956a63350b0c6b85d84692986eb9092bd05/words.json")
             val connection = url.openConnection()
             val inputStream = connection.getInputStream()
@@ -193,6 +219,8 @@ class DownloadThread(filesDir: File, con: Context): Thread() {
 }
 
 data class WordBank(val data: Array<Word>) {
+
+    // Checks if word exists
     fun contains(word: String): Boolean {
         for (e in data) {
             if (e.word == word)
@@ -202,6 +230,7 @@ data class WordBank(val data: Array<Word>) {
         return false
     }
 
+    // Retrieves the date the given word was used
     @RequiresApi(Build.VERSION_CODES.O)
     fun wordToDate(word: String): LocalDate {
         for (e in data) {
@@ -212,6 +241,7 @@ data class WordBank(val data: Array<Word>) {
         return LocalDate.parse("0001-01-01")
     }
 
+    // Returns the date of the newest word
     @RequiresApi(Build.VERSION_CODES.O)
     fun latestDate(): LocalDate {
         return LocalDate.parse(data.last().date)
