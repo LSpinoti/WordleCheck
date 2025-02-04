@@ -6,5 +6,6 @@ Words are not repeated in the game, meaning that this tool tells you if your wor
 ## Screenshots
 
 ![Screenshot showing the app's main screen](screenshots/blank.png "Main screen")
-![Screenshot showing stating the the word is still available](screenshots/valid.png "Valid word")
+![Screenshot showing stating the the word is still available](screenshots/valid1.png "Valid word")
+![Screenshot showing stating the the word is still available](screenshots/valid2.png "Another valid word")
 ![Screenshot showing stating the the word has been previously used](screenshots/used.png "Used word")
