@@ -1,3 +1,5 @@
+![WordleCheck Logo](screenshots/logo.png "Logo")
+
 # WordleCheck
 
 App for checking if a word has been used by Wordle in the past.
